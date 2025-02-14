@@ -138,8 +138,8 @@ graph TB
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/okwareddevnest/tech-donations.git
-cd tech-donations
+git clone https://github.com/lewiii254/Tech-donations.git
+cd Tech-donations
 ```
 
 2. Install dependencies:
