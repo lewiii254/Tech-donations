@@ -175,7 +175,7 @@ MPESA_CALLBACK_SECRET_KEY=your_secret_key
 MPESA_CALLBACK_URL=your_ngrok_url/api/mpesa/your_secret_key
 ```
 
-## API Documentation
+## 📃API Documentation
 
 ### Donation Endpoints
 
@@ -198,7 +198,7 @@ GET /api/donations/stats
 POST /api/mpesa/{secretKey}
 ```
 
-## Database Schema
+## 📃Database Schema
 
 ```mermaid
 ---
