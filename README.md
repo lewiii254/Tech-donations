@@ -13,7 +13,7 @@ A modern web platform built with Next.js that enables charitable donations throu
 - [M-Pesa Integration](#m-pesa-integration)
 - [Contributing](#contributing)
 
-## Overview
+## 🙌Overview
 
 Tech Charity is a platform designed to bridge the digital divide by facilitating technology education and resources for underserved communities. The platform enables seamless donations through M-Pesa integration and provides real-time tracking of impact metrics.
 
