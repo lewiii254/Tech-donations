@@ -85,7 +85,7 @@ sequenceDiagram
     note over Backend,MongoDB: Real-time Updates
 ```
 
-### Component Architecture
+### 🚀Component Architecture
 
 ```mermaid
 ---
