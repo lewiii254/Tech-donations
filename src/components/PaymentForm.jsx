@@ -16,53 +16,96 @@ function PaymentForm() {
   const [stkQueryLoading, setStkQueryLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
-  var reqcount = 0;
+  let retryCount = 0;
+  const maxRetries = 10;
+  const retryDelay = 5000; // 5 seconds
 
   const stkPushQueryWithIntervals = async (CheckoutRequestID) => {
     setStkQueryLoading(true);
+    retryCount = 0;
     
-    // Wait for 3 seconds
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    const checkPaymentStatus = async () => {
+      try {
+        // Wait before checking status
+        await new Promise(resolve => setTimeout(resolve, retryCount === 0 ? 5000 : retryDelay));
 
-    try {
-      const { data, error } = await stkPushQuery(CheckoutRequestID);
+        const { data, error } = await stkPushQuery(CheckoutRequestID);
 
-      if (error) {
-        setStkQueryLoading(false);
-        setLoading(false);
-        setErrorMessage(error?.response?.data?.errorMessage || "Payment verification failed");
-        return;
-      }
+        if (error) {
+          if (retryCount < maxRetries) {
+            retryCount++;
+            console.log(`Payment verification attempt ${retryCount}/${maxRetries}`);
+            return checkPaymentStatus();
+          } else {
+            setStkQueryLoading(false);
+            setLoading(false);
+            setErrorMessage("Payment verification timeout. Please check your M-Pesa messages for confirmation.");
+            return;
+          }
+        }
 
-      if (data) {
-        if (data.ResultCode === "0") {
-          // Payment successful - update the status in database
-          const updateResponse = await fetch('/api/donations/update', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              checkoutRequestId: CheckoutRequestID,
-              mpesaCode: data.ResultDesc.match(/\[(\w+)\]/)?.[1] || ''  // Extract mpesa code from ResultDesc
-            })
-          });
+        if (data) {
+          if (data.ResultCode === "0") {
+            // Payment successful - update the status in database
+            try {
+              const updateResponse = await fetch('/api/donations/update', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  checkoutRequestId: CheckoutRequestID,
+                  mpesaCode: data.ResultDesc.match(/\[(\w+)\]/)?.[1] || ''  // Extract mpesa code from ResultDesc
+                })
+              });
 
-          // Just set success state since we know the system works well
-          setStkQueryLoading(false);
-          setLoading(false);
-          setSuccess(true);
+              if (!updateResponse.ok) {
+                console.warn('Failed to update donation status in database');
+              }
+            } catch (updateError) {
+              console.error('Error updating donation:', updateError);
+            }
+
+            setStkQueryLoading(false);
+            setLoading(false);
+            setSuccess(true);
+          } else if (data.ResultCode === "1032") {
+            // User cancelled - stop retrying
+            setStkQueryLoading(false);
+            setLoading(false);
+            setErrorMessage("Payment was cancelled by user");
+          } else if (data.ResultCode === "1037") {
+            // Timeout - continue checking
+            if (retryCount < maxRetries) {
+              retryCount++;
+              console.log(`Payment timeout, retrying... ${retryCount}/${maxRetries}`);
+              return checkPaymentStatus();
+            } else {
+              setStkQueryLoading(false);
+              setLoading(false);
+              setErrorMessage("Payment verification timeout. Please check your phone for M-Pesa confirmation.");
+            }
+          } else {
+            // Other error codes
+            setStkQueryLoading(false);
+            setLoading(false);
+            setErrorMessage(data?.ResultDesc || "Payment failed. Please try again.");
+          }
+        }
+      } catch (error) {
+        if (retryCount < maxRetries) {
+          retryCount++;
+          console.log(`Network error, retrying... ${retryCount}/${maxRetries}`);
+          return checkPaymentStatus();
         } else {
           setStkQueryLoading(false);
           setLoading(false);
-          setErrorMessage(data?.ResultDesc || "Payment failed");
+          setErrorMessage("Network error during payment verification. Please check your M-Pesa messages.");
         }
       }
-    } catch (error) {
-      setStkQueryLoading(false);
-      setLoading(false);
-      setErrorMessage("Failed to verify payment status");
-    }
+    };
+
+    await checkPaymentStatus();
   };
 
   const handleSubmit = async (e) => {
@@ -94,12 +137,24 @@ function PaymentForm() {
       return;
     }
 
+    // Enhanced Kenyan phone number validation
     const kenyanPhoneNumberRegex =
       /^(07\d{8}|01\d{8}|2547\d{8}|2541\d{8}|\+2547\d{8}|\+2541\d{8})$/;
 
     if (!kenyanPhoneNumberRegex.test(formData.mpesa_number)) {
       setLoading(false);
-      setErrorMessage("Please enter a valid M-Pesa number");
+      setErrorMessage("Please enter a valid Kenyan M-Pesa number (e.g., 0712345678 or +254712345678)");
+      return;
+    }
+
+    // Additional validation for M-Pesa specific prefixes
+    const cleanNumber = formData.mpesa_number.replace(/^\+/, '').replace(/^0/, '254');
+    const mpesaValidPrefixes = ['254701', '254702', '254703', '254704', '254705', '254706', '254707', '254708', '254709', '254710', '254711', '254712', '254713', '254714', '254715', '254716', '254717', '254718', '254719'];
+    const hasValidPrefix = mpesaValidPrefixes.some(prefix => cleanNumber.startsWith(prefix));
+    
+    if (!hasValidPrefix) {
+      setLoading(false);
+      setErrorMessage("Please enter a valid M-Pesa number (Safaricom network only)");
       return;
     }
 

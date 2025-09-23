@@ -24,6 +24,31 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/about" className="text-base text-gray-600 hover:text-orange-600">
+                  About
+                </Link>
+              </li>
+              <li>
+                <Link href="/programs" className="text-base text-gray-600 hover:text-orange-600">
+                  Programs
+                </Link>
+              </li>
+              <li>
+                <Link href="/impact" className="text-base text-gray-600 hover:text-orange-600">
+                  Impact Stories
+                </Link>
+              </li>
+              <li>
+                <Link href="/volunteer" className="text-base text-gray-600 hover:text-orange-600">
+                  Volunteer
+                </Link>
+              </li>
+              <li>
+                <Link href="/faq" className="text-base text-gray-600 hover:text-orange-600">
+                  FAQ
+                </Link>
+              </li>
+              <li>
                 <Link href="/donate" className="text-base text-gray-600 hover:text-orange-600">
                   Donate
                 </Link>
@@ -40,6 +65,11 @@ export default function Footer() {
           <div>
             <h3 className="text-sm font-semibold text-gray-900">Contact</h3>
             <ul className="mt-4 space-y-4">
+              <li>
+                <Link href="/contact" className="text-base text-gray-600 hover:text-orange-600">
+                  Contact Us
+                </Link>
+              </li>
               <li className="text-base text-gray-600">
                 <span className="block">Email:</span>
                 <a href="mailto:info@techcharity.org" className="hover:text-orange-600">
