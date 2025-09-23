@@ -3,9 +3,11 @@ import DonationsList from '@/components/DonationsList';
 
 async function getDashboardData() {
   try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    
     const [donationsRes, statsRes] = await Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/donations?page=1&limit=10`),
-      fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/donations/stats`)
+      fetch(`${baseUrl}/api/donations?page=1&limit=10`),
+      fetch(`${baseUrl}/api/donations/stats`)
     ]);
 
     if (!donationsRes.ok || !statsRes.ok) {
